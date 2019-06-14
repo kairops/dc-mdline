@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.1 (2019-06-14)
+
+### Build
+
+* Update Auto Release Log adding v0.1.1 info with JPL ([b439d3c](https://github.com/kairops/dc-mdline/commit/b439d3c))
+
+### Docs
+
+* Generate v0.1.0 changelog with JPL ([bf6e3a3](https://github.com/kairops/dc-mdline/commit/bf6e3a3))
+
 ## v0.1.0 (2019-06-14)
 
 ### New
