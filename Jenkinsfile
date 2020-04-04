@@ -1,26 +1,45 @@
 #!groovy
 
-@Library('github.com/red-panda-ci/jenkins-pipeline-library@v3.1.6') _
+@Library('github.com/teecke/jenkins-pipeline-library@v3.4.1') _
 
 // Initialize global config
-cfg = jplConfig('dc-mdline', 'bash', '', [slack: '#integrations', email:'redpandaci+dc-mdline@gmail.com'])
+cfg = jplConfig('dc-mdline', 'bash', '', [email: env.CIKAIROS_NOTIFY_EMAIL_TARGETS])
+
+/**
+ * Build and publish docker images
+ *
+ * @param nextReleaseNumber String Release number to be used as tag
+ */
+def buildAndPublishDockerImage(nextReleaseNumber = "") {
+    if (nextReleaseNumber == "") {
+        nextReleaseNumber = sh (script: "kd get-next-release-number .", returnStdout: true).trim().substring(1)
+    }
+    docker.withRegistry("", 'cikairos-docker-credentials') {
+        def customImage = docker.build("kairops/${cfg.projectName}:${nextReleaseNumber}", "--pull --no-cache .")
+        customImage.push()
+        if (nextReleaseNumber != "beta") {
+            customImage.push('latest')
+        }
+    }
+}
 
 pipeline {
-    agent none
+    agent { label 'docker' }
 
     stages {
         stage ('Initialize') {
-            agent { label 'docker' }
             steps  {
                 jplStart(cfg)
             }
         }
-        stage ('Build') {
-            agent { label 'docker' }
+        stage ('Bash linter') {
             steps {
-                script {
-                    jplDockerPush (cfg, "kairops/dc-mdline", "test", ".", "https://registry.hub.docker.com", "cikairos-docker-credentials")
-                }
+                sh 'devcontrol run-bash-linter'
+            }
+        }
+        stage ('Build') {
+            steps {
+                buildAndPublishDockerImage("beta")
             }
         }
         stage ('Test') {
@@ -29,19 +48,10 @@ pipeline {
                 sh 'bin/test.sh'
             }
         }
-        stage ('Release confirm') {
-            when { expression { cfg.BRANCH_NAME.startsWith('release/v') || cfg.BRANCH_NAME.startsWith('hotfix/v') } }
-            steps {
-                jplPromoteBuild(cfg)
-            }
-        }
-        stage ('Make release'){
-            agent { label 'docker' }
+        stage ('Make release') {
             when { branch 'release/new' }
             steps {
-                script { cfg.releaseTag = sh (script: "kd get-next-release-number .", returnStdout: true).trim() }
-                jplDockerPush (cfg, "kairops/dc-mdline", cfg.releaseTag.substring(1), ".", "https://registry.hub.docker.com", "cikairos-docker-credentials")
-                jplDockerPush (cfg, "kairops/dc-mdline", "latest", ".", "https://registry.hub.docker.com", "cikairos-docker-credentials")
+                buildAndPublishDockerImage()
                 jplMakeRelease(cfg, true)
             }
         }
@@ -58,6 +68,6 @@ pipeline {
         ansiColor('xterm')
         buildDiscarder(logRotator(artifactNumToKeepStr: '20',artifactDaysToKeepStr: '30'))
         disableConcurrentBuilds()
-        timeout(time: 1, unit: 'DAYS')
+        timeout(time: 10, unit: 'MINUTES')
     }
 }
