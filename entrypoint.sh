@@ -7,7 +7,7 @@ function echo_err () {
 }
 function echo_debug () {
     if [ "$KD_DEBUG" == "1" ]; then
-        echo >&2 ">>>> DEBUG >>>>> $(date "+%Y-%m-%d %H:%M:%S") $KD_NAME: $@"
+        echo >&2 ">>>> DEBUG >>>>> $(date "+%Y-%m-%d %H:%M:%S") $KD_NAME: " "$@"
     fi
 }
 
@@ -23,12 +23,12 @@ fi
 
 # Parameter check
 if [ $# -eq 0 ]; then
-    $mdlineCMD
+    "$mdlineCMD"
     echo_debug "end"
     exit 1
 fi
 
 # Execute mdline
-$mdlineCMD $@
+"$mdlineCMD" "$@"
 
 echo_debug "end"
