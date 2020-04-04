@@ -37,6 +37,11 @@ pipeline {
                 sh 'devcontrol run-bash-linter'
             }
         }
+        stage ('Build') {
+            steps {
+                buildAndPublishDockerImage("beta")
+            }
+        }
         stage ('Test') {
             agent { label 'docker' }
             steps  {
