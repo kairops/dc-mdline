@@ -1,3 +1,7 @@
+# DEPRECATED
+
+Please visit https://github.com/tpbtools/dc-mdline
+
 # Docker Command: Markdown timeline format generator
 
 Convert files from Markdown format to timeline HTML format
