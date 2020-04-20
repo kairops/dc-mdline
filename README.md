@@ -1,6 +1,6 @@
 # DEPRECATED
 
-Please visit https://github.com/tpbtools/dc-mdline
+Please visit https://github.com/ayudadigital/dc-mdline
 
 # Docker Command: Markdown timeline format generator
 
